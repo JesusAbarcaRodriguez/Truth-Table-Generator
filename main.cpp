@@ -48,6 +48,10 @@ public:
     {
         return this->noValores[fila];
     }
+    char getNombre()
+    {
+        return this->nombre;
+    }
     void setNombre(char nombre)
     {
         this->nombre = nombre;
@@ -174,11 +178,11 @@ void tablaVerdad()
         {
             if (((i / (int)pow(2, j)) % 2) == 1)
             {
-                arrVariables[maxColumna - j].setValor(true);
+                arrVariables[maxColumna -(j+1)].setValor(true);
             }
             else
             {
-                arrVariables[maxColumna - j].setValor(false);
+                arrVariables[maxColumna - (j+1)].setValor(false);
             }
         }
         cout << endl;
@@ -186,19 +190,22 @@ void tablaVerdad()
 }
 void imprimirTabla()
 {
+    for (int i = 0; i < maxColumna; i++)
+    {
+        cout << arrVariables[i].getNombre() << "| ";
+    }
+    cout << endl;
     for (int i = 0; i < maxFila; i++)
     {
         for (int j = 0; j < maxColumna; j++)
         {
-            if (arrVariables[j].getValor(j))
+            if (arrVariables[j].getValor(i))
             {
-                cout << "1"
-                     << " ";
+                cout << "1"<< "| ";
             }
             else
             {
-                cout << "0"
-                     << " ";
+                cout << "0"<< "| ";
             }
         }
         cout << endl;
