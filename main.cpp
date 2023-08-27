@@ -56,8 +56,24 @@ public:
     {
         this->nombre = nombre;
     }
+    void setAllValores(bool valor[])
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            this->valores[i] = valor[i];
+        }
+    }
+    void invertirValores()
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            this->valores[i] = !this->valores[i];
+            this->noValores[i] = !this->noValores[i];
+        }
+    }
 };
 
+Variable solucion(string);
 string contarVariables(string);
 void imprimirTabla();
 string abrirTxt();
@@ -65,6 +81,11 @@ void leer();
 void tablaVerdad();
 void generarTablaVerdad();
 void separarExpresiones(string);
+
+Variable operacionXor(Variable, Variable);
+Variable operacionAnd(Variable, Variable);
+Variable operationOr(Variable, Variable);
+
 int maxFila = 0;
 int maxColumna = 0;
 stack<string> pila;
@@ -99,11 +120,13 @@ int main(int argc, char const *argv[])
         case 2:
             tablaVerdad();
             imprimirTabla();
-            // separarExpresiones(archivo);
-            // generarTablaVerdad();
+            separarExpresiones(archivo);
+            //generarTablaVerdad();
             cout << "Primero debe ingresar un documento" << endl;
             break;
         case 3:
+        cout << "Ingrese la expresion que desea resolver" << endl;
+            solucion(pila.top());
             break;
         case 0:
             break;
@@ -170,7 +193,6 @@ void tablaVerdad()
 {
     maxFila = pow(2, variablesStr.length());
     maxColumna = variablesStr.length();
-  
 
     for (int i = 0; i < maxFila; i++)
     {
@@ -178,11 +200,11 @@ void tablaVerdad()
         {
             if (((i / (int)pow(2, j)) % 2) == 1)
             {
-                arrVariables[maxColumna -(j+1)].setValor(true);
+                arrVariables[maxColumna - (j + 1)].setValor(true);
             }
             else
             {
-                arrVariables[maxColumna - (j+1)].setValor(false);
+                arrVariables[maxColumna - (j + 1)].setValor(false);
             }
         }
         cout << endl;
@@ -201,11 +223,13 @@ void imprimirTabla()
         {
             if (arrVariables[j].getValor(i))
             {
-                cout << "1"<< "| ";
+                cout << "1"
+                     << "| ";
             }
             else
             {
-                cout << "0"<< "| ";
+                cout << "0"
+                     << "| ";
             }
         }
         cout << endl;
@@ -253,4 +277,82 @@ void generarTablaVerdad()
          // operacion
      }
      */
+}
+
+Variable solucion(string expresion)
+{
+
+    string expresionAux = expresion;
+    Variable solucionvariable;
+    string newExpresion = "";
+    if (expresion.find("(") != std::string::npos)
+    {
+        expresionAux = expresion.substr(expresion.find("(") + 1, expresion.find(")") - expresion.find("(") - 1);
+        solucionvariable = solucion(expresionAux);
+        if (expresion.find(")") + 1 == 239)
+        {
+            //    solucionvariable.invertirValores();
+        }
+        expresionAux = expresion.substr(0, expresion.find("(")) + "S1" + expresion.substr(expresion.find(")") + 1, expresion.length() - expresion.find(")") - 1);
+        cout << expresionAux << endl;
+        cout << " ***********" << endl;
+    }
+
+    /*     if (expresion.find("#"))
+        {
+
+            operacionAnd(arrVariables[0], arrVariables[1]);
+        } */
+        return solucionvariable;
+}
+
+Variable operationAnd(Variable variable1, Variable variable2)
+{
+    Variable outVariable;
+
+    for (int i = 0; i < maxFila; i++)
+    {
+        if (variable1.getValor(i) && variable2.getValor(i))
+        {
+            outVariable.setValor(true);
+        }
+    }
+    return outVariable;
+}
+Variable operationOr(Variable variable1, Variable variable2)
+{
+    Variable outVariable;
+
+    for (int i = 0; i < maxFila; i++)
+    {
+        if (variable1.getValor(i) || variable2.getValor(i))
+        {
+            outVariable.setValor(true);
+        }
+    }
+    return outVariable;
+}
+Variable operacionXor(Variable variable1, Variable variable2)
+{
+    Variable outVariable;
+
+    for (int i = 0; i < maxFila; i++)
+    {
+        if (variable1.getValor(i) != variable2.getValor(i))
+        {
+            outVariable.setValor(true);
+        }
+    }
+    return outVariable;
+}
+
+Variable getVariables(char variable){
+    for (int i = 0; i < maxColumna; i++)
+    {
+        if (arrVariables[i].getNombre() == variable)
+        {
+            return arrVariables[i];
+        }
+    }
+    return false;
 }
