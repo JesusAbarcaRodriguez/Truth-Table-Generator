@@ -142,7 +142,7 @@ int main(int argc, char const *argv[])
             // Sal del bucle cuando respuesta sea 0
             break;
         default:
-            cout << "Su respuesta no esta� entre las opciones." << endl;
+            cout << "Su respuesta no esta entre las opciones." << endl;
             break;
         }
     } while (respuesta != 0);
@@ -419,11 +419,12 @@ Variable getVariableByList(char variable, Variable newArrVariables[])
 {
     for (int i = 0; i < maxColumna; i++)
     {
-        if (arrVariables[i].getNombre() == variable)
+        if (newArrVariables[i].getNombre() == variable)
         {
 
-            return arrVariables[i];
+            return newArrVariables[i];
         }
     }
     return false;
 }
+
