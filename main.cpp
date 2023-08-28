@@ -19,11 +19,12 @@ private:
 public:
     Variable()
     {
+        contFilas = 0;
         this->nombre = ' ';
         for (int i = 0; i < 16; i++)
         {
             this->valores[i] = false;
-            noValores[i] = false;
+            noValores[i] = true;
         }
     }
     Variable(char nombre)
@@ -48,9 +49,9 @@ public:
     {
         return this->noValores[fila];
     }
-    char getNombre()
+    char getNombre() const
     {
-        return this->nombre;
+        return nombre;
     }
     void setNombre(char nombre)
     {
@@ -63,6 +64,12 @@ public:
             this->valores[i] = valor[i];
         }
     }
+
+    bool *getAllValores()
+    {
+        return this->valores;
+    }
+
     void invertirValores()
     {
         for (int i = 0; i < 16; i++)
@@ -81,7 +88,8 @@ void leer();
 void tablaVerdad();
 void generarTablaVerdad();
 void separarExpresiones(string);
-
+Variable getVariables(char);
+Variable getVariableByList(char, Variable[]);
 Variable operacionXor(Variable, Variable);
 Variable operacionAnd(Variable, Variable);
 Variable operationOr(Variable, Variable);
@@ -104,6 +112,7 @@ int main(int argc, char const *argv[])
         cout << "Menu'" << endl;
         cout << " 1 Digitar documento" << endl;
         cout << " 2 Ver tablas" << endl;
+        cout << " 3 Resolver expresion" << endl;
         cout << " 0 finalizar" << endl;
         cin >> respuesta;
         cout << "-----------------------------------------------------" << endl;
@@ -121,17 +130,20 @@ int main(int argc, char const *argv[])
             tablaVerdad();
             imprimirTabla();
             separarExpresiones(archivo);
-            //generarTablaVerdad();
+            // generarTablaVerdad();
             cout << "Primero debe ingresar un documento" << endl;
             break;
         case 3:
-        cout << "Ingrese la expresion que desea resolver" << endl;
+            cout << "Ingrese la expresion que desea resolver" << endl;
             solucion(pila.top());
+
             break;
         case 0:
+            // Sal del bucle cuando respuesta sea 0
             break;
         default:
-            cout << "Su respuestas no esta entre las opciones " << endl;
+            cout << "Su respuesta no esta� entre las opciones." << endl;
+            break;
         }
     } while (respuesta != 0);
     return 0;
@@ -253,31 +265,6 @@ void separarExpresiones(string archivo)
     pila.push(expresion);
     cout << pila.top() << endl;
 }
-void generarTablaVerdad()
-{ /*
-     stack<string> pilaAux = pila;
-     for (int i = 0; i < maxColumna; i++)
-     {
-         cout << "|" << variables[i] << "|";
-     }
-     for (int p = 0; p < pila.size(); p++)
-     {
-         cout << pilaAux.top() << endl;
-         pilaAux.pop();
-     }
-     cout << endl;
-     for (int i = 0; i < maxFila; i++)
-     {
-         for (int j = 0; j < maxColumna; j++)
-         {
-             cout << table[i][j] << " ";
-         }
-         cout << endl;
-
-         // operacion
-     }
-     */
-}
 
 Variable solucion(string expresion)
 {
@@ -287,23 +274,87 @@ Variable solucion(string expresion)
     string newExpresion = "";
     if (expresion.find("(") != std::string::npos)
     {
+
         expresionAux = expresion.substr(expresion.find("(") + 1, expresion.find(")") - expresion.find("(") - 1);
         solucionvariable = solucion(expresionAux);
         if (expresion.find(")") + 1 == 239)
         {
-            //    solucionvariable.invertirValores();
+            solucionvariable.invertirValores();
         }
-        expresionAux = expresion.substr(0, expresion.find("(")) + "S1" + expresion.substr(expresion.find(")") + 1, expresion.length() - expresion.find(")") - 1);
+        expresion = expresion.substr(0, expresion.find("(")) + "%" + expresion.substr(expresion.find(")") + 1, expresion.length() - expresion.find(")") - 1);
         cout << expresionAux << endl;
         cout << " ***********" << endl;
     }
+    Variable opVariables[6];
+    int nOperaciones = 0;
 
-    /*     if (expresion.find("#"))
+    while (expresion.size() > 1)
+    {
+        if (expresion.find("#"))
         {
+            Variable a, b;
+            int isANegative = 1;
+            int isBNegative = 1;
+            if (expresion[expresion.find("#") - 1] == 239)
+            {
+                isANegative++;
+            }
+            if (expresion[expresion.find("#") - 1] == 37) //%
+            {
+                a = solucionvariable;
+            }
+            else if (isalpha(expresion[expresion.find("#") - isANegative]))
+            {
 
-            operacionAnd(arrVariables[0], arrVariables[1]);
-        } */
-        return solucionvariable;
+                char aValue = expresion[expresion.find("#") - isANegative];
+                cout << aValue << endl;
+                a = getVariables(aValue);
+                isANegative == 2 ? a.invertirValores() : a.setAllValores(a.getAllValores());
+            }
+            else
+            {
+                a = getVariableByList(expresion[expresion.find("#") - isANegative], opVariables);
+            }
+
+            if (expresion[expresion.find("#") + 1] == 37)
+            {
+                b = solucionvariable;
+            }
+            else if (isalpha(expresion[expresion.find("#") + 1]))
+            {
+                char bValue = expresion[expresion.find("#") + 1];
+                cout << bValue << endl;
+                b = getVariables(bValue);
+            }
+            else
+            {
+                a = getVariableByList(expresion[expresion.find("#") + 1], opVariables);
+            }
+            if (expresion[expresion.find("#") + 2] == 239)
+            {
+                b.invertirValores();
+                isBNegative++;
+            }
+
+            opVariables[nOperaciones] = operacionXor(a, b);
+            opVariables[nOperaciones].setNombre(to_string(nOperaciones)[0]);
+            expresion = expresion.substr(0, expresion.find("#") - isANegative) + to_string(nOperaciones)[0] + expresion.substr(expresion.find("#") + isBNegative + 1, expresion.length() - expresion.find("#") - isBNegative);
+            nOperaciones++;
+        }
+
+
+    }
+	for (int j = 0; j < nOperaciones; j++)
+		cout<< expresion<<endl;
+		{
+			for (int i = 0; i < maxFila; i++)
+			{
+				cout << opVariables[nOperaciones - 1].getValor(i) << " ";
+			}
+			cout << endl;
+		}
+	
+	return opVariables[nOperaciones - 1];
 }
 
 Variable operationAnd(Variable variable1, Variable variable2)
@@ -342,15 +393,35 @@ Variable operacionXor(Variable variable1, Variable variable2)
         {
             outVariable.setValor(true);
         }
+        else
+        {
+            outVariable.setValor(false);
+        }
     }
     return outVariable;
 }
 
-Variable getVariables(char variable){
+Variable getVariables(char variableChar)
+{
+    for (int i = 0; i < maxColumna; i++)
+    {
+        char valueA = arrVariables[i].getNombre();
+
+        if (valueA == variableChar)
+        {
+            return arrVariables[i];
+        }
+    }
+    return false;
+}
+
+Variable getVariableByList(char variable, Variable newArrVariables[])
+{
     for (int i = 0; i < maxColumna; i++)
     {
         if (arrVariables[i].getNombre() == variable)
         {
+
             return arrVariables[i];
         }
     }
