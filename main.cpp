@@ -93,25 +93,21 @@ Variable getVariableByList(char, Variable[]);
 Variable operationXor(Variable, Variable);
 Variable operationAnd(Variable, Variable);
 Variable operationOr(Variable, Variable);
-void imprimirSolucion(Variable, string)
+void imprimirSolucion(Variable, string);
 
-
-int precedence(char );
+int precedence(char);
 int maxFila = 0;
 int maxColumna = 0;
 stack<string> pilaExpresiones;
-
-
-
 
 Variable arrVariables[5];
 
 int main(int argc, char const *argv[])
 {
-	string archivo;
-	string variablesStr = " ";
+    string archivo;
+    string variablesStr = " ";
     int respuesta = 0;
-	Variable solu;
+    Variable solu;
     do
     {
         respuesta = -1;
@@ -128,18 +124,11 @@ int main(int argc, char const *argv[])
         case 1:
             archivo = abrirTxt();
             variablesStr = contarVariables(archivo);
-			tablaVerdad(variablesStr);
-			separarExpresiones(archivo);
-			imprimirTabla();
-			solu = solucion(pilaExpresiones.top());
-			for (int i = 0 ; i< maxFila; i++)
-			{
-				if(solu.getValor(i)== true){
-					cout<<"1";
-				}else{
-					cout<<"0";
-				}
-			}
+            tablaVerdad(variablesStr);
+            separarExpresiones(archivo);
+            imprimirTabla();
+            solu = solucion(pilaExpresiones.top());
+            imprimirSolucion(solu, pilaExpresiones.top());
             break;
         case 0:
             break;
@@ -161,7 +150,8 @@ string abrirTxt()
     string txt;
     ifstream arc;
     arc.open(archi.c_str(), ios::in);
-    if (arc.fail()) {
+    if (arc.fail())
+    {
         cout << "error" << endl;
         exit(1);
     }
@@ -212,7 +202,6 @@ void tablaVerdad(string variablesStr)
                 arrVariables[maxColumna - (j + 1)].setValor(false);
             }
         }
-        cout << endl;
     }
 }
 void imprimirTabla()
@@ -247,7 +236,7 @@ void separarExpresiones(string archivo)
     {
         if (c == ',')
         {
-			pilaExpresiones.push(expresion);
+            pilaExpresiones.push(expresion);
             expresion = "";
         }
         else
@@ -255,108 +244,145 @@ void separarExpresiones(string archivo)
             expresion += c;
         }
     }
-	pilaExpresiones.push(expresion);
+    pilaExpresiones.push(expresion);
 }
 
-Variable solucion(string expresion) {
-	stack<Variable> pilaVariables;
-	stack<char> pilaOperadores;
-	
-	for (char c : expresion) {
-		if (c == '(') {
-			pilaOperadores.push(c);
-		} else if (c == ')') {
-			while (!pilaOperadores.empty() && pilaOperadores.top() != '(') {
-				char operador = pilaOperadores.top();
-				pilaOperadores.pop();
-				
-				Variable variable2 = pilaVariables.top();
-				pilaVariables.pop();
-				
-				if (operador == 239) { // NOT
-					variable2.invertirValores();
-				}
-				
-				Variable variable1 = pilaVariables.top();
-				pilaVariables.pop();
-				
-				if (operador == '*') { // AND
-					pilaVariables.push(operationAnd(variable1, variable2));
-				} else if (operador == '+') { // OR
-					pilaVariables.push(operationOr(variable1, variable2));
-				} else if (operador == '#') { // XOR
-					pilaVariables.push(operationXor(variable1, variable2));
-				}
-			}
-			if (!pilaOperadores.empty()) {
-				pilaOperadores.pop();  // Quita el '(' de la pila
-			}
-		} else if (c == '*' || c == '+' || c == '#' || c == 239) {
-			while (!pilaOperadores.empty() && pilaOperadores.top() != '(' &&
-				   precedence(pilaOperadores.top()) >= precedence(c)) {
-				char operador = pilaOperadores.top();
-				pilaOperadores.pop();
-				
-				Variable variable2 = pilaVariables.top();
-				pilaVariables.pop();
-				
-				if (operador == 239) { // NOT
-					variable2.invertirValores();
-				}
-				
-				Variable variable1 = pilaVariables.top();
-				pilaVariables.pop();
-				
-				if (operador == '*') { // AND
-					pilaVariables.push(operationAnd(variable1, variable2));
-				} else if (operador == '+') { // OR
-					pilaVariables.push(operationOr(variable1, variable2));
-				} else if (operador == '#') { // XOR
-					pilaVariables.push(operationXor(variable1, variable2));
-				}
-			}
-				   pilaOperadores.push(c);
-		} else if (isalpha(c)) {
-			Variable variable = getVariables(c);
-			pilaVariables.push(variable);
-		}
-	}
-	
-	while (!pilaOperadores.empty()) {
-		char operador = pilaOperadores.top();
-		pilaOperadores.pop();
-		
-		Variable variable2 = pilaVariables.top();
-		pilaVariables.pop();
-		
-		if (operador == '\'') { // NOT
-			variable2.invertirValores();
-		}
-		
-		Variable variable1 = pilaVariables.top();
-		pilaVariables.pop();
-		
-		if (operador == '*') { // AND
-			pilaVariables.push(operationAnd(variable1, variable2));
-		} else if (operador == '+') { // OR
-			pilaVariables.push(operationOr(variable1, variable2));
-		} else if (operador == '#') { // XOR
-			pilaVariables.push(operationXor(variable1, variable2));
-		}
-	}
-	
-	return pilaVariables.top();
+Variable solucion(string expresion)
+{
+    stack<Variable> pilaVariables;
+    stack<char> pilaOperadores;
+
+    for (char c : expresion)
+    {
+        if (c == '(')
+        {
+            pilaOperadores.push(c);
+        }
+        else if (c == ')')
+        {
+            while (!pilaOperadores.empty() && pilaOperadores.top() != '(')
+            {
+                char operador = pilaOperadores.top();
+                pilaOperadores.pop();
+
+                Variable variable2 = pilaVariables.top();
+                pilaVariables.pop();
+
+                if (operador == 239)
+                { // NOT
+                    variable2.invertirValores();
+                }
+
+                Variable variable1 = pilaVariables.top();
+                pilaVariables.pop();
+
+                if (operador == '*')
+                { // AND
+                    pilaVariables.push(operationAnd(variable1, variable2));
+                }
+                else if (operador == '+')
+                { // OR
+                    pilaVariables.push(operationOr(variable1, variable2));
+                }
+                else if (operador == '#')
+                { // XOR
+                    pilaVariables.push(operationXor(variable1, variable2));
+                }
+            }
+            if (!pilaOperadores.empty())
+            {
+                pilaOperadores.pop(); // Quita el '(' de la pila
+            }
+        }
+        else if (c == '*' || c == '+' || c == '#' || c == 239)
+        {
+            while (!pilaOperadores.empty() && pilaOperadores.top() != '(' &&
+                   precedence(pilaOperadores.top()) >= precedence(c))
+            {
+                char operador = pilaOperadores.top();
+                pilaOperadores.pop();
+
+                Variable variable2 = pilaVariables.top();
+                pilaVariables.pop();
+
+                if (operador == 239)
+                { // NOT
+                    variable2.invertirValores();
+                }
+
+                Variable variable1 = pilaVariables.top();
+                pilaVariables.pop();
+
+                if (operador == '*')
+                { // AND
+                    pilaVariables.push(operationAnd(variable1, variable2));
+                }
+                else if (operador == '+')
+                { // OR
+                    pilaVariables.push(operationOr(variable1, variable2));
+                }
+                else if (operador == '#')
+                { // XOR
+                    pilaVariables.push(operationXor(variable1, variable2));
+                }
+            }
+            pilaOperadores.push(c);
+        }
+        else if (isalpha(c))
+        {
+            Variable variable = getVariables(c);
+            pilaVariables.push(variable);
+        }
+    }
+
+    while (!pilaOperadores.empty())
+    {
+        char operador = pilaOperadores.top();
+        pilaOperadores.pop();
+
+        Variable variable2 = pilaVariables.top();
+        pilaVariables.pop();
+
+        if (operador == '\'')
+        { // NOT
+            variable2.invertirValores();
+        }
+
+        Variable variable1 = pilaVariables.top();
+        pilaVariables.pop();
+
+        if (operador == '*')
+        { // AND
+            pilaVariables.push(operationAnd(variable1, variable2));
+        }
+        else if (operador == '+')
+        { // OR
+            pilaVariables.push(operationOr(variable1, variable2));
+        }
+        else if (operador == '#')
+        { // XOR
+            pilaVariables.push(operationXor(variable1, variable2));
+        }
+    }
+
+    return pilaVariables.top();
 }
 
-int precedence(char operador) {
-	if (operador == '*') { // AND
-		return 2;
-	} else if (operador == '+') { // OR
-		return 1;
-	} else if (operador == '#' || operador == 239) { // XOR y NOT
-		return 3;
-	}
-	return 0;
+int precedence(char operador)
+{
+    if (operador == '*')
+    { // AND
+        return 2;
+    }
+    else if (operador == '+')
+    { // OR
+        return 1;
+    }
+    else if (operador == '#' || operador == 239)
+    { // XOR y NOT
+        return 3;
+    }
+    return 0;
 }
 
 Variable operationAnd(Variable variable1, Variable variable2)
@@ -369,11 +395,12 @@ Variable operationAnd(Variable variable1, Variable variable2)
         {
             outVariable.setValor(true);
         }
-		else{
-			outVariable.setValor(false);
-		}
+        else
+        {
+            outVariable.setValor(false);
+        }
     }
-	
+
     return outVariable;
 }
 Variable operationOr(Variable variable1, Variable variable2)
@@ -385,9 +412,11 @@ Variable operationOr(Variable variable1, Variable variable2)
         if (variable1.getValor(i) || variable2.getValor(i))
         {
             outVariable.setValor(true);
-        }else{
-			outVariable.setValor(false);
-		}
+        }
+        else
+        {
+            outVariable.setValor(false);
+        }
     }
     return outVariable;
 }
@@ -423,16 +452,48 @@ Variable getVariables(char variableChar)
     return false;
 }
 
-Variable getVariableByList(char variable, Variable newArrVariables[])
+void imprimirSolucion(Variable variable, string variablesStr)
 {
+    cout << "Solucion: " << endl;
     for (int i = 0; i < maxColumna; i++)
     {
-        if (newArrVariables[i].getNombre() == variable)
+        cout.width(3);
+        cout << arrVariables[i].getNombre() << "| ";
+    }
+    cout << variablesStr << "|";
+    cout << endl;
+    cout << endl;
+    for (int i = 0; i < maxFila; i++)
+    {
+        for (int j = 0; j < maxColumna; j++)
+        {
+            if (arrVariables[j].getValor(i))
+            {
+                cout.width(3);
+                cout << "1"
+                     << "| ";
+            }
+            else
+            {
+                cout.width(3);
+                cout << "0"
+                     << "| ";
+            }
+        }
+        if (variable.getValor(i))
         {
 
-            return newArrVariables[i];
+            cout.width((variablesStr.length() / 2) +1);
+            cout << "1";
         }
-    }
-    return false;
-}
+        else
+        {
+            cout.width((variablesStr.length() / 2) + 1);
+            cout << "0";
+        }
+        cout.width(variablesStr.length() / 2 +1);
+        cout << "|";
 
+        cout << endl;
+    }
+}
