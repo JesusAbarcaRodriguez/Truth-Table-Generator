@@ -90,13 +90,18 @@ void generarTablaVerdad();
 void separarExpresiones(string);
 Variable getVariables(char);
 Variable getVariableByList(char, Variable[]);
-Variable operacionXor(Variable, Variable);
-Variable operacionAnd(Variable, Variable);
+Variable operationXor(Variable, Variable);
+Variable operationAnd(Variable, Variable);
 Variable operationOr(Variable, Variable);
+void imprimirSolucion(Variable, string)
 
+
+int precedence(char );
 int maxFila = 0;
 int maxColumna = 0;
 stack<string> pilaExpresiones;
+
+
 
 
 Variable arrVariables[5];
@@ -106,6 +111,7 @@ int main(int argc, char const *argv[])
 	string archivo;
 	string variablesStr = " ";
     int respuesta = 0;
+	Variable solu;
     do
     {
         respuesta = -1;
@@ -125,7 +131,15 @@ int main(int argc, char const *argv[])
 			tablaVerdad(variablesStr);
 			separarExpresiones(archivo);
 			imprimirTabla();
-			solucion(pilaExpresiones.top());
+			solu = solucion(pilaExpresiones.top());
+			for (int i = 0 ; i< maxFila; i++)
+			{
+				if(solu.getValor(i)== true){
+					cout<<"1";
+				}else{
+					cout<<"0";
+				}
+			}
             break;
         case 0:
             break;
@@ -244,95 +258,105 @@ void separarExpresiones(string archivo)
 	pilaExpresiones.push(expresion);
 }
 
-Variable solucion(string expresion)
-{
-
-    string expresionAux = expresion;
-    Variable solucionvariable;
-    string newExpresion = "";
-    if (expresion.find("(") != std::string::npos)
-    {
-
-        expresionAux = expresion.substr(expresion.find("(") + 1, expresion.find(")") - expresion.find("(") - 1);
-        solucionvariable = solucion(expresionAux);
-        if (expresion.find(")") + 1 == 239)
-        {
-            solucionvariable.invertirValores();
-        }
-        expresion = expresion.substr(0, expresion.find("(")) + "%" + expresion.substr(expresion.find(")") + 1, expresion.length() - expresion.find(")") - 1);
-        cout << expresionAux << endl;
-        cout << " ***********" << endl;
-    }
-    Variable opVariables[6];
-    int nOperaciones = 0;
-
-    while (expresion.size() > 1)
-    {
-        if (expresion.find("#"))
-        {
-            Variable variable1,variable2;
-            int isANegative = 1;
-            int isBNegative = 1;
-            if (expresion[expresion.find("#") - 1] == 239)
-            {
-                isANegative++;
-            }
-            if (expresion[expresion.find("#") - 1] == 37) //%
-            {
-				variable1 = solucionvariable;
-            }
-            else if (isalpha(expresion[expresion.find("#") - isANegative]))
-            {
-
-                char aValue = expresion[expresion.find("#") - isANegative];
-                cout << aValue << endl;
-				variable1 = getVariables(aValue);
-                isANegative == 2 ? variable1.invertirValores() :variable1.setAllValores(variable1.getAllValores());
-            }
-            else
-            {
-				variable1 = getVariableByList(expresion[expresion.find("#") - isANegative], opVariables);
-            }
-
-            if (expresion[expresion.find("#") + 1] == 37)
-            {
-				variable2 = solucionvariable;
-            }
-            else if (isalpha(expresion[expresion.find("#") + 1]))
-            {
-                char bValue = expresion[expresion.find("#") + 1];
-                cout << bValue << endl;
-				variable2 = getVariables(bValue);
-            }
-            else
-            {
-				variable2 = getVariableByList(expresion[expresion.find("#") + 1], opVariables);
-            }
-            if (expresion[expresion.find("#") + 2] == 239)
-            {
-				variable2.invertirValores();
-                isBNegative++;
-            }
-
-            opVariables[nOperaciones] = operacionXor(variable1, variable2);
-            opVariables[nOperaciones].setNombre(to_string(nOperaciones)[0]);
-            expresion = expresion.substr(0, expresion.find("#") - isANegative) + to_string(nOperaciones)[0] + expresion.substr(expresion.find("#") + isBNegative + 1, expresion.length() - expresion.find("#") - isBNegative);
-            nOperaciones++;
-        }
-
-
-    }
-	for (int j = 0; j < nOperaciones; j++)
-		cout<< expresion<<endl;
-		{
-			for (int i = 0; i < maxFila; i++)
-			{
-				cout << opVariables[nOperaciones - 1].getValor(i) << " ";
-			}
-			cout << endl;
-		}
+Variable solucion(string expresion) {
+	stack<Variable> pilaVariables;
+	stack<char> pilaOperadores;
 	
-	return opVariables[nOperaciones - 1];
+	for (char c : expresion) {
+		if (c == '(') {
+			pilaOperadores.push(c);
+		} else if (c == ')') {
+			while (!pilaOperadores.empty() && pilaOperadores.top() != '(') {
+				char operador = pilaOperadores.top();
+				pilaOperadores.pop();
+				
+				Variable variable2 = pilaVariables.top();
+				pilaVariables.pop();
+				
+				if (operador == 239) { // NOT
+					variable2.invertirValores();
+				}
+				
+				Variable variable1 = pilaVariables.top();
+				pilaVariables.pop();
+				
+				if (operador == '*') { // AND
+					pilaVariables.push(operationAnd(variable1, variable2));
+				} else if (operador == '+') { // OR
+					pilaVariables.push(operationOr(variable1, variable2));
+				} else if (operador == '#') { // XOR
+					pilaVariables.push(operationXor(variable1, variable2));
+				}
+			}
+			if (!pilaOperadores.empty()) {
+				pilaOperadores.pop();  // Quita el '(' de la pila
+			}
+		} else if (c == '*' || c == '+' || c == '#' || c == 239) {
+			while (!pilaOperadores.empty() && pilaOperadores.top() != '(' &&
+				   precedence(pilaOperadores.top()) >= precedence(c)) {
+				char operador = pilaOperadores.top();
+				pilaOperadores.pop();
+				
+				Variable variable2 = pilaVariables.top();
+				pilaVariables.pop();
+				
+				if (operador == 239) { // NOT
+					variable2.invertirValores();
+				}
+				
+				Variable variable1 = pilaVariables.top();
+				pilaVariables.pop();
+				
+				if (operador == '*') { // AND
+					pilaVariables.push(operationAnd(variable1, variable2));
+				} else if (operador == '+') { // OR
+					pilaVariables.push(operationOr(variable1, variable2));
+				} else if (operador == '#') { // XOR
+					pilaVariables.push(operationXor(variable1, variable2));
+				}
+			}
+				   pilaOperadores.push(c);
+		} else if (isalpha(c)) {
+			Variable variable = getVariables(c);
+			pilaVariables.push(variable);
+		}
+	}
+	
+	while (!pilaOperadores.empty()) {
+		char operador = pilaOperadores.top();
+		pilaOperadores.pop();
+		
+		Variable variable2 = pilaVariables.top();
+		pilaVariables.pop();
+		
+		if (operador == '\'') { // NOT
+			variable2.invertirValores();
+		}
+		
+		Variable variable1 = pilaVariables.top();
+		pilaVariables.pop();
+		
+		if (operador == '*') { // AND
+			pilaVariables.push(operationAnd(variable1, variable2));
+		} else if (operador == '+') { // OR
+			pilaVariables.push(operationOr(variable1, variable2));
+		} else if (operador == '#') { // XOR
+			pilaVariables.push(operationXor(variable1, variable2));
+		}
+	}
+	
+	return pilaVariables.top();
+}
+
+int precedence(char operador) {
+	if (operador == '*') { // AND
+		return 2;
+	} else if (operador == '+') { // OR
+		return 1;
+	} else if (operador == '#' || operador == 239) { // XOR y NOT
+		return 3;
+	}
+	return 0;
 }
 
 Variable operationAnd(Variable variable1, Variable variable2)
@@ -345,7 +369,11 @@ Variable operationAnd(Variable variable1, Variable variable2)
         {
             outVariable.setValor(true);
         }
+		else{
+			outVariable.setValor(false);
+		}
     }
+	
     return outVariable;
 }
 Variable operationOr(Variable variable1, Variable variable2)
@@ -357,11 +385,13 @@ Variable operationOr(Variable variable1, Variable variable2)
         if (variable1.getValor(i) || variable2.getValor(i))
         {
             outVariable.setValor(true);
-        }
+        }else{
+			outVariable.setValor(false);
+		}
     }
     return outVariable;
 }
-Variable operacionXor(Variable variable1, Variable variable2)
+Variable operationXor(Variable variable1, Variable variable2)
 {
     Variable outVariable;
 
@@ -405,5 +435,4 @@ Variable getVariableByList(char variable, Variable newArrVariables[])
     }
     return false;
 }
-
 
