@@ -14,8 +14,8 @@ class Variable
 {
 private:
     char nombre;
-    bool valores[16];
-    bool noValores[16];
+    bool valores[32];
+    bool noValores[32];
     int contFilas;
 
 public:
@@ -23,7 +23,7 @@ public:
     {
         contFilas = 0;
         this->nombre = ' ';
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 32; i++)
         {
             this->valores[i] = false;
             noValores[i] = true;
@@ -32,10 +32,8 @@ public:
     Variable(char nombre)
     {
         this->nombre = nombre;
-        for (int i = 0; i < 16; i++)
-        {
+        for (int i = 0; i < 32; i++)
             this->valores[i] = false;
-        }
     }
     void setValor(bool valor)
     {
@@ -44,37 +42,27 @@ public:
         contFilas++;
     }
     bool getValor(int fila)
-    {
-        return this->valores[fila];
-    }
+    { return this->valores[fila]; }
     bool getNoValor(int fila)
-    {
-        return this->noValores[fila];
-    }
+    { return this->noValores[fila]; }
     char getNombre() const
     {
         return nombre;
     }
     void setNombre(char nombre)
-    {
-        this->nombre = nombre;
-    }
+    {  this->nombre = nombre;   }
     void setAllValores(bool valor[])
     {
-        for (int i = 0; i < 16; i++)
-        {
-            this->valores[i] = valor[i];
-        }
+        for (int i = 0; i < 32; i++)
+    this->valores[i] = valor[i];
     }
 
     bool *getAllValores()
-    {
-        return this->valores;
-    }
+    { return this->valores; }
 
     void invertirValores()
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 32; i++)
         {
             this->valores[i] = !this->valores[i];
             this->noValores[i] = !this->noValores[i];
@@ -95,6 +83,9 @@ Variable getVariableByList(char, Variable[]);
 Variable operationXor(Variable, Variable);
 Variable operationAnd(Variable, Variable);
 Variable operationOr(Variable, Variable);
+
+void aplicarOperador(stack<Variable> &pilaVariables, char operador);
+
 void imprimirSolucion(Variable, string);
 void imprimirSolucionList(stack<Variable>, stack<string>);
 int prioridad(char);
@@ -140,9 +131,8 @@ int main(int argc, char const *argv[])
                 system("pause");
                 system("cls");
             }
-            imprimirSolucionList(soluciones, pilaExpresiones2);
-            system("pause");
-            system("cls");
+            if (soluciones.size() > 1)
+                imprimirSolucionList(soluciones, pilaExpresiones2);
             break;
         case 0:
             break;
@@ -165,14 +155,10 @@ string abrirTxt()
     ifstream arc;
     arc.open(archi.c_str(), ios::in);
     if (arc.fail())
-    {
-        cout << "error" << endl;
-        exit(1);
-    }
+        cout << "error el archivo no se encuentra" << endl;
     while (!arc.eof())
-    {
         getline(arc, txt);
-    }
+
     arc.close();
 
     return txt;
@@ -181,20 +167,12 @@ string contarVariables(const string txt)
 {
     string stringVariables = "";
     for (char c : txt)
-    {
         if (isalpha(c))
-        {
             if (stringVariables.find(c) == string::npos)
-            {
                 stringVariables += c;
-            }
-        }
-    }
     sort(stringVariables.begin(), stringVariables.end());
     for (int i = 0; i < stringVariables.length(); i++)
-    {
         arrVariables[i].setNombre(stringVariables[i]);
-    }
     return stringVariables;
 }
 
@@ -204,42 +182,24 @@ void tablaVerdad(string variablesStr)
     maxColumna = variablesStr.length();
 
     for (int i = 0; i < maxFila; i++)
-    {
         for (int j = maxColumna - 1; j >= 0; j--)
-        {
-            if (((i / (int)pow(2, j)) % 2) == 1)
-            {
-                arrVariables[maxColumna - (j + 1)].setValor(true);
-            }
-            else
-            {
-                arrVariables[maxColumna - (j + 1)].setValor(false);
-            }
-        }
-    }
+            ((i / (int)pow(2, j)) % 2) == 1 ? arrVariables[maxColumna - (j + 1)].setValor(true) 
+            : arrVariables[maxColumna - (j + 1)].setValor(false);
 }
+
 void imprimirTabla()
 {
     for (int i = 0; i < maxColumna; i++)
-    {
         cout << arrVariables[i].getNombre() << "| ";
-    }
     cout << endl;
     for (int i = 0; i < maxFila; i++)
     {
         for (int j = 0; j < maxColumna; j++)
-        {
             if (arrVariables[j].getValor(i))
-            {
-                cout << "1"
-                     << "| ";
-            }
+                cout << "1"<< "| "; 
             else
-            {
-                cout << "0"
-                     << "| ";
-            }
-        }
+                cout << "0"<< "| ";
+            
         cout << endl;
     }
 }
@@ -247,17 +207,14 @@ void separarExpresiones(string archivo)
 {
     string expresion = "";
     for (char c : archivo)
-    {
         if (c == ',')
         {
             pilaExpresiones.push(expresion);
             expresion = "";
         }
         else
-        {
-            expresion += c;
-        }
-    }
+            expresion += c; 
+
     pilaExpresiones.push(expresion);
 }
 
@@ -276,38 +233,17 @@ Variable solucion(string expresion)
             pilaVariables.push(change);
         }
         else if (c == '(')
-        {
-            pilaOperadores.push(c);
-        }
+        { pilaOperadores.push(c); }
         else if (c == ')')
         {
             while (!pilaOperadores.empty() && pilaOperadores.top() != '(')
             {
                 char operador = pilaOperadores.top();
                 pilaOperadores.pop();
-
-                Variable variable2 = pilaVariables.top();
-                pilaVariables.pop();
-
-                Variable variable1 = pilaVariables.top();
-                pilaVariables.pop();
-                if (operador == '*')
-                { // AND
-                    pilaVariables.push(operationAnd(variable1, variable2));
-                }
-                else if (operador == '+')
-                { // OR
-                    pilaVariables.push(operationOr(variable1, variable2));
-                }
-                else if (operador == '#')
-                { // XOR
-                    pilaVariables.push(operationXor(variable1, variable2));
-                }
+                aplicarOperador(pilaVariables, operador);
             }
             if (!pilaOperadores.empty())
-            {
-                pilaOperadores.pop(); // Quita el '(' de la pila
-            }
+            { pilaOperadores.pop(); }
         }
         else if (c == '*' || c == '+' || c == '#')
         {
@@ -316,25 +252,7 @@ Variable solucion(string expresion)
             {
                 char operador = pilaOperadores.top();
                 pilaOperadores.pop();
-
-                Variable variable2 = pilaVariables.top();
-                pilaVariables.pop();
-
-                Variable variable1 = pilaVariables.top();
-                pilaVariables.pop();
-
-                if (operador == '*')
-                { // AND
-                    pilaVariables.push(operationAnd(variable1, variable2));
-                }
-                else if (operador == '+')
-                { // OR
-                    pilaVariables.push(operationOr(variable1, variable2));
-                }
-                else if (operador == '#')
-                { // XOR
-                    pilaVariables.push(operationXor(variable1, variable2));
-                }
+                aplicarOperador(pilaVariables, operador);
             }
             pilaOperadores.push(c);
         }
@@ -349,42 +267,35 @@ Variable solucion(string expresion)
     {
         char operador = pilaOperadores.top();
         pilaOperadores.pop();
-
-        Variable variable2 = pilaVariables.top();
-        pilaVariables.pop();
-        Variable variable1 = pilaVariables.top();
-        pilaVariables.pop();
-        if (operador == '*')
-        { // AND
-            pilaVariables.push(operationAnd(variable1, variable2));
-        }
-        else if (operador == '+')
-        { // OR
-            pilaVariables.push(operationOr(variable1, variable2));
-        }
-        else if (operador == '#')
-        { // XOR
-            pilaVariables.push(operationXor(variable1, variable2));
-        }
+        if (pilaVariables.size() > 1)
+            aplicarOperador(pilaVariables, operador);
     }
 
     return pilaVariables.top();
+}
+void aplicarOperador(stack<Variable> &pilaVariables, char operador)
+{
+    Variable variable2 = pilaVariables.top();
+    pilaVariables.pop();
+    Variable variable1 = pilaVariables.top();
+    pilaVariables.pop();
+
+    if (operador == '*')
+        pilaVariables.push(operationAnd(variable1, variable2));
+    else if (operador == '+')
+        pilaVariables.push(operationOr(variable1, variable2));
+    else if (operador == '#')
+        pilaVariables.push(operationXor(variable1, variable2));
 }
 
 int prioridad(char operador)
 {
     if (operador == '*')
-    { // AND
         return 2;
-    }
     else if (operador == '+')
-    { // OR
         return 1;
-    }
     else if (operador == '#')
-    { // XOR
         return 3;
-    }
     return 0;
 }
 
@@ -393,16 +304,8 @@ Variable operationAnd(Variable variable1, Variable variable2)
     Variable outVariable;
 
     for (int i = 0; i < maxFila; i++)
-    {
-        if (variable1.getValor(i) && variable2.getValor(i))
-        {
-            outVariable.setValor(true);
-        }
-        else
-        {
-            outVariable.setValor(false);
-        }
-    }
+        variable1.getValor(i) && variable2.getValor(i)? outVariable.setValor(true) 
+            : outVariable.setValor(false);
 
     return outVariable;
 }
@@ -411,16 +314,8 @@ Variable operationOr(Variable variable1, Variable variable2)
     Variable outVariable;
 
     for (int i = 0; i < maxFila; i++)
-    {
-        if (variable1.getValor(i) || variable2.getValor(i))
-        {
-            outVariable.setValor(true);
-        }
-        else
-        {
-            outVariable.setValor(false);
-        }
-    }
+        variable1.getValor(i) || variable2.getValor(i)? outVariable.setValor(true)
+        :outVariable.setValor(false);
     return outVariable;
 }
 Variable operationXor(Variable variable1, Variable variable2)
@@ -428,16 +323,8 @@ Variable operationXor(Variable variable1, Variable variable2)
     Variable outVariable;
 
     for (int i = 0; i < maxFila; i++)
-    {
-        if (variable1.getValor(i) == variable2.getValor(i))
-        {
-            outVariable.setValor(true);
-        }
-        else
-        {
-            outVariable.setValor(false);
-        }
-    }
+        variable1.getValor(i) != variable2.getValor(i)? outVariable.setValor(true)
+        :outVariable.setValor(false);
     return outVariable;
 }
 
@@ -446,11 +333,8 @@ Variable getVariables(char variableChar)
     for (int i = 0; i < maxColumna; i++)
     {
         char valueA = arrVariables[i].getNombre();
-
         if (valueA == variableChar)
-        {
             return arrVariables[i];
-        }
     }
     return false;
 }
@@ -474,13 +358,13 @@ void imprimirSolucion(Variable variable, string variablesStr)
             {
                 cout.width(3);
                 cout << "1"
-                     << "| ";
+                    << "| ";
             }
             else
             {
                 cout.width(3);
                 cout << "0"
-                     << "| ";
+                    << "| ";
             }
         }
         if (variable.getValor(i))
@@ -556,4 +440,6 @@ void imprimirSolucionList(stack<Variable> arrSoluciones, stack<string> expresion
         }
         cout << endl;
     }
+    system("pause");
+    system("cls");
 }
