@@ -103,6 +103,7 @@ int main(int argc, char const *argv[])
     Variable solu;
     do
     {
+        system("cls");
         respuesta = -1;
         cout << "-----------------------------------------------------" << endl;
         cout << "Menu'" << endl;
@@ -116,6 +117,10 @@ int main(int argc, char const *argv[])
         {
         case 1:
             archivo = abrirTxt();
+            if (archivo == "error"){
+                system("pause");
+                break;
+            }
             variablesStr = contarVariables(archivo);
             tablaVerdad(variablesStr);
             separarExpresiones(archivo);
@@ -154,8 +159,11 @@ string abrirTxt()
     string txt;
     ifstream arc;
     arc.open(archi.c_str(), ios::in);
-    if (arc.fail())
+    if (arc.fail()){
         cout << "error el archivo no se encuentra" << endl;
+        return "error";
+    }
+    else
     while (!arc.eof())
         getline(arc, txt);
 
@@ -222,7 +230,6 @@ Variable solucion(string expresion)
 {
     stack<Variable> pilaVariables;
     stack<char> pilaOperadores;
-    int cont = 0;
     for (char c : expresion)
     {
         if (c == NOT && !pilaVariables.empty())
